@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test 1234</title>
+</head>
+<body>
+    <h1>Insight</h1>
+    <p>Grubergh</p>
+
+    <table id="db_connection_status_table">
+        <thead>
+            <tr>
+                <td>Status</td>
+                <td>Database</td>
+                <td>Timestamp</td>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+</body>
+<script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
+<script type="text/javascript" charset="utf-8">
+
+    let socket = io();
+    socket.on('connect', () => {
+        socket.emit('message', {data: "I'm connected!"});
+    });
+
+    socket.on('db_connection_status', (data) => {
+        // console.log(data)
+        update_db_status_table(JSON.parse(data))
+    })
+
+    function update_db_status_table(data){
+        let table_element = document.getElementById('db_connection_status_table')
+        let old_tbody = table_element.tBodies[0]
+        let new_tbody = document.createElement('tbody')
+
+        console.log(table_element)
+
+        data['db_status_list']
+            .slice()
+            .sort((a, b) => (a.name.toUpperCase() > b.name.toUpperCase()) ? 1 : -1)
+            .map(db => {
+                console.log(db)
+
+                // Create row for the current db
+                let row = document.createElement('TR')
+
+                // Create cells
+                let status_cell = row.insertCell(0)
+                status_cell.innerHTML = db.status
+
+                let name_cell = row.insertCell(1)
+                name_cell.innerHTML = db.name
+
+                let timestamp_cell = row.insertCell(2)
+                timestamp_cell.innerHTML = db.timestamp
+
+                // Append the current row to the new t_body
+                new_tbody.appendChild(row)
+            })
+
+        /* Replace the old t_body with the new t_body
+         * ==========================================
+         * This method of updating the DOM (creating a hidden new object, populating it, then swapping it out with
+         * the old one) is used to minimize the time spent editing the DOM (flicker reduction)
+         */
+        table_element.replaceChild(new_tbody, old_tbody)
+    }
+
+</script>
+</html>
