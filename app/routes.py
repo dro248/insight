@@ -1,10 +1,11 @@
-from flask import Flask, render_template, make_response
-from flask_socketio import SocketIO, send, emit
-from datetime import datetime
 import json
-from config import Session, HEARTBEAT_TIMEOUT
-from engine.models.tables import SQLDatabase
 import threading
+
+from flask import Flask, render_template
+from flask_socketio import SocketIO
+
+from config import Session, HEARTBEAT_TIMEOUT
+from engine.models.tables import DBCurrentStatus
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
@@ -39,30 +40,35 @@ def start_cogsworth():
     all be updated every HEARTBEAT_TIMEOUT.
     :return:
     """
-    print('Yop!')
+    print('Starting Cogsworth')
     cogsworth_update()
 
 
-@set_interval(3)
+@set_interval(HEARTBEAT_TIMEOUT)
 def cogsworth_update():
     update_all()
 
 
 def update_all():
-    print('Cogsworth says: DING!')
+    print('Cogsworth UPDATE!')
     insight_session = Session()
 
     # Testing: send some data from the insight database
-    sql_dbs_list = [dict(name=row.db_name, status=True, timestamp=datetime.utcnow().strftime('%d %B %Y %H:%M:%S UTC'))
-                    for row in insight_session.query(SQLDatabase).all()]
+    db_status_list = [dict(name=row.name, status=row.status, timestamp=row.timestamp.strftime('%d %B %Y %H:%M:%S UTC'))
+                      for row in insight_session.query(DBCurrentStatus).all()]
 
     # TODO: send all data from
-    update_client(payload={'db_status_list': sql_dbs_list}, channel='db_connection_status')
+    update_client(payload={'db_status_list': db_status_list}, channel='db_connection_status')
 
 
 @app.route('/')
 def index_endpoint():
-    return render_template('index.html')
+    return render_template('home.html')
+
+
+@app.route('/database_uptime')
+def db_uptime_endpoint():
+    return render_template('database_uptime.html')
 
 
 @app.route('/demo')
@@ -89,25 +95,7 @@ def update_endpoint():
 @socketio.on('message')
 def handle_message(message):
     print(f'received message: {message}')
-
-    data1 = dict(
-        name='postgres_rds',
-        status=True,
-        timestamp=datetime.utcnow().strftime('%d %B %Y %H:%M:%S UTC'),
-    )
-    data2 = dict(
-        name='rcm_odbc',
-        status=False,
-        timestamp=datetime.utcnow().strftime('%d %B %Y %H:%M:%S UTC'),
-    )
-    data3 = dict(
-        name='airflow_metadata_db',
-        status=True,
-        timestamp=datetime.utcnow().strftime('%d %B %Y %H:%M:%S UTC'),
-    )
-
-    update_client(payload={'db_status_list': [data1, data2, data3]},
-                  channel='db_connection_status')
+    update_all()
 
 
 # Send Messages
