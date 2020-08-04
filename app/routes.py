@@ -118,4 +118,7 @@ def update_client(payload, channel: str):
 
 
 if __name__ == '__main__':
-    socketio.run(app=app, debug=True, use_reloader=True)
+    #socketio.run(app=app, debug=True, use_reloader=True)
+    socketio.run(app=app, host='0.0.0.0', port=8087, debug=True, use_reloader=True)
+
+
