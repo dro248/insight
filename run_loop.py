@@ -46,7 +46,7 @@ def log_to_db(engine, connection_name: str, status: bool, created_at, stacktrace
         con.execute(statement, **data)
 
 
-def log_connection_attempt(connection, connection_timeout_seconds=1):  
+def connect(connection, connection_timeout_seconds=1):  
     """
     Attempts to make contact with a given connection object.
     """
@@ -74,24 +74,42 @@ def log_connection_attempt(connection, connection_timeout_seconds=1):
     except (FunctionTimedOut, Exception) as e:
         # connection failed
         print(f"{connection['name']}: FAILED")
-        log_to_db(
-            engine=log_engine, 
-            connection_name=connection['name'],
-            status=False,
-            created_at=created_at,
-            stacktrace=str(e)
-        )
-        return
+#        log_to_db(
+#            engine=log_engine, 
+#            connection_name=connection['name'],
+#            status=False,
+#            created_at=created_at,
+#            stacktrace=str(e)
+#        )
+
+        return {
+	    'engine': log_engine,
+	    'connection_name': connection['name'],
+	    'status': False,
+	    'created_at': created_at,
+	    'stacktrace': str(e),
+	}
     
     # connection successful
-    print(f"{connection['name']}: SUCCESS")
-    log_to_db(
-        engine=log_engine, 
-        connection_name=connection['name'],
-        status=True,
-        created_at=created_at,
-        stacktrace=None
-    )
+    #print(f"{connection['name']}: SUCCESS")
+    #log_to_db(
+    #    engine=log_engine, 
+    #    connection_name=connection['name'],
+    #    status=True,
+    #    created_at=created_at,
+    #    stacktrace=None
+    #)
+
+    return {
+	'engine': log_engine,
+	'connection_name': connection['name'],
+	'status': True,
+	'created_at': created_at,
+	'stacktrace': None,
+    }
+
+
+connect_and_log = lambda connection, con_timeout: log_to_db(**connect(connection, connection_timeout_seconds=con_timeout))
         
         
 if __name__ == '__main__':
@@ -117,10 +135,10 @@ if __name__ == '__main__':
         # Check DB connectivity
         for con in connections_df.to_dict('records'):
             t = threading.Thread(
-                target=log_connection_attempt,
+                target=connect_and_log,
                 kwargs=dict(
                     connection=con,
-		    connection_timeout_seconds=CONNECTION_TIMEOUT,
+		    con_timeout=CONNECTION_TIMEOUT,
                 )
             )
             t.start()
