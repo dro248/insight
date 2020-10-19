@@ -6,6 +6,11 @@ import time
 import json
 import threading
 import pandas as pd
+import logging
+
+
+logging.basicConfig(filename='app.log', filemode='w', level=logging.INFO)
+
 
 """
 HEARTBEAT_TIMEOUT: this is the tempo of how often every connection will be checked (in seconds).
@@ -96,21 +101,16 @@ connect_and_log = lambda connection, con_timeout: log_to_db(**connect(connection
         
         
 if __name__ == '__main__':
-    print("Starting main thread")
+    logging.info("Starting main thread")
     
     # Create Connections
     pg_etl_connection_string = 'postgres://postgres:docker@172.23.4.217:8089/postgres'
     pg_etl_engine = create_engine(pg_etl_connection_string, use_batch_mode=True)
     pg_schema = 'insight'
     
-    #mbs_connection_string = 'mssql+pyodbc:///?odbc_connect=DSN%3DRCM%3BUID%3Ddatajobs%3BPWD%3DDmIk0ObJlnq5NTN54BjK'
-    #mbs_engine = create_engine(mbs_connection_string)
-    
 
     while True:
-        print()
-        print(f'Start heartbeat: {datetime.today().strftime("%d %B %Y, %H:%M:%S")}')
-        print('='*50)
+        logging.info(f'Heartbeat Timestamp: {datetime.today().strftime("%d %B %Y, %H:%M:%S")}')
 
         # Get DB Connections
         connections_df = pd.read_sql('select * from insight.connections', con=pg_etl_engine)
@@ -126,8 +126,7 @@ if __name__ == '__main__':
             )
             t.start()
 
-        # Print number of threads
-        print(f"Thread Count: {len(threading.enumerate())}")
+        logging.info(f"Thread Count: {len(threading.enumerate())}")
 
 	# Sleep for the duration of the HEARTBEAT_TIMEOUT before checking again.
         time.sleep(HEARTBEAT_TIMEOUT)
