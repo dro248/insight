@@ -74,13 +74,6 @@ def connect(connection, connection_timeout_seconds=1):
     except (FunctionTimedOut, Exception) as e:
         # connection failed
         print(f"{connection['name']}: FAILED")
-#        log_to_db(
-#            engine=log_engine, 
-#            connection_name=connection['name'],
-#            status=False,
-#            created_at=created_at,
-#            stacktrace=str(e)
-#        )
 
         return {
 	    'engine': log_engine,
@@ -91,14 +84,6 @@ def connect(connection, connection_timeout_seconds=1):
 	}
     
     # connection successful
-    #print(f"{connection['name']}: SUCCESS")
-    #log_to_db(
-    #    engine=log_engine, 
-    #    connection_name=connection['name'],
-    #    status=True,
-    #    created_at=created_at,
-    #    stacktrace=None
-    #)
 
     return {
 	'engine': log_engine,
