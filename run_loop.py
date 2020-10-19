@@ -73,8 +73,6 @@ def connect(connection, connection_timeout_seconds=1):
         
     except (FunctionTimedOut, Exception) as e:
         # connection failed
-        print(f"{connection['name']}: FAILED")
-
         return {
 	    'engine': log_engine,
 	    'connection_name': connection['name'],
@@ -129,9 +127,7 @@ if __name__ == '__main__':
             t.start()
 
         # Print number of threads
-        print('<<<')
-        print(f"Number of Threads: {len(threading.enumerate())}")
-        print('>>>')
+        print(f"Thread Count: {len(threading.enumerate())}")
 
 	# Sleep for the duration of the HEARTBEAT_TIMEOUT before checking again.
         time.sleep(HEARTBEAT_TIMEOUT)
